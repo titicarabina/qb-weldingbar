@@ -1,7 +1,6 @@
 -- Variables
 
 local QBCore = exports['qb-core']:GetCoreObject()
-local PlayerData = QBCore.Functions.GetPlayerData()
 local Welding = false
 local SucceededAttempts = 0
 local NeededAttempts = 4
@@ -153,5 +152,3 @@ CreateThread(function()
         Citizen.Wait(sleep)
     end
 end)
-
--- Exports
