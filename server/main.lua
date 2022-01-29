@@ -44,6 +44,6 @@ RegisterNetEvent('qb-weldingbar:server:searchCheckpoint', function(point)
     Player.Functions.AddItem("ironore", 1)
     TriggerClientEvent('inventory:client:ItemBox', src, itemInfo, "add")
     Config.Checkpoints[point]["opened"] = true
-    TriggerClientEvent('qb-weldingbar:client:setCabinState', -1, point, true)
+    TriggerClientEvent('qb-weldingbar:client:SetBusyState', -1, point, true)
     ResetCheckpointStateTimer(point)
 end)
