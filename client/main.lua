@@ -114,13 +114,6 @@ RegisterNetEvent('qb-weldingbar:client:SetBusyState', function(point, bool)
     Config.Checkpoints[point]["opened"]= bool
 end)
 
-
-RegisterNetEvent('qb-weldingbar:client:StartWelding', function(point, bool)
-    CutIron(point)
-    PoliceCall()
-    Config.Checkpoints[point]["opened"]= bool
-end)
-
 RegisterNetEvent('QBCore:Client:OnPlayerLoaded', function()
     QBCore.Functions.TriggerCallback('qb-weldingbar:server:GetCheckpointsConfig', function(CheckpointsConfig)
         Config.Checkpoints = CheckpointsConfig
