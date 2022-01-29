@@ -20,9 +20,9 @@ end)
 QBCore.Functions.CreateCallback('qb-weldingbar:server:HasItems', function(source, cb)
     local src = source
     local Player = QBCore.Functions.GetPlayer(src)
-    local weedak47 = Player.Functions.GetItemByName("tubautogen")
-    local rollingpaper = Player.Functions.GetItemByName("aparatsudura")
-    if weedak47 ~= nil and rollingpaper ~= nil then
+    local gastube = Player.Functions.GetItemByName("tubautogen")
+    local weldingtool = Player.Functions.GetItemByName("aparatsudura")
+    if gastube ~= nil and weldingtool ~= nil then
         cb(true)
     else
         cb(false)
