@@ -1,6 +1,6 @@
-# QBCore Template Script
+# QBCore Stealing Iron with weld
 
-qb-template used with QBCore Framework
+based on qb-template and qb-houserobbery
 <br>
 
 # Dependencies
