@@ -12,11 +12,6 @@ QBCore.Functions.CreateCallback('qb-weldingbar:server:GetCheckpointsConfig', fun
     cb(Config.Checkpoints)
 end)
 
-RegisterNetEvent('qb-weldingbar:server:StartWelding', function(point, bool)
-    Config.Checkpoints[point]["opened"] = bool
-    TriggerClientEvent('qb-weldingbar:client:SetBusyState', -1, point, bool)
-end)
-
 QBCore.Functions.CreateCallback('qb-weldingbar:server:HasItems', function(source, cb)
     local src = source
     local Player = QBCore.Functions.GetPlayer(src)
@@ -46,7 +41,6 @@ RegisterNetEvent('qb-weldingbar:server:searchCheckpoint', function(point)
     local src = source
     local Player = QBCore.Functions.GetPlayer(src)
     local itemInfo = QBCore.Shared.Items["ironore"]
-    local itemInfo2 = QBCore.Shared.Items["tubautogen"]
     Player.Functions.AddItem("ironore", 1)
     TriggerClientEvent('inventory:client:ItemBox', src, itemInfo, "add")
     Config.Checkpoints[point]["opened"] = true
