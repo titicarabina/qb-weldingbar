@@ -2,9 +2,6 @@
 
 local QBCore = exports['qb-core']:GetCoreObject()
 local PlayerData = QBCore.Functions.GetPlayerData()
-local group = 'user'
-local CurrentCops = 0
-local Inside = false
 local Welding = false
 local SucceededAttempts = 0
 local NeededAttempts = 4
@@ -47,50 +44,6 @@ local function GetClosestPlayer()
 	return closestPlayer, closestDistance
 end
 
-local function CutIron(point)
-    local ped = PlayerPedId()
-    local Skillbar = exports['qb-skillbar']:GetSkillbarObject()
-    TriggerServerEvent('qb-weldingbar:server:SetBusyState', point, true)
-    FreezeEntityPosition(ped, true)
-    TriggerEvent('animations:client:EmoteCommandStart', {"weld"})
-    Welding = true
-    Skillbar.Start({
-        duration = math.random(7500, 15000),
-        pos = math.random(10, 30),
-        width = math.random(10, 20),
-    }, function()
-        if SucceededAttempts + 1 >= NeededAttempts then
-            Welding = false
-            ClearPedTasks(PlayerPedId())
-            TriggerServerEvent('qb-weldingbar:server:searchCheckpoint', point)
-            Config.Checkpoints[point]["opened"] = true
-            TriggerServerEvent('qb-weldingbar:server:SetBusyState', point, true)
-            SucceededAttempts = 0
-            FreezeEntityPosition(ped, false)
-            SetTimeout(500, function()
-                Welding = false
-            end)
-        else
-            Skillbar.Repeat({
-                duration = math.random(700, 1250),
-                pos = math.random(10, 40),
-                width = math.random(10, 13),
-            })
-            SucceededAttempts = SucceededAttempts + 1
-        end
-    end, function()
-        TriggerEvent('animations:client:EmoteCommandStart', {"c"})
-        Welding = false
-        ClearPedTasks(PlayerPedId())
-        TriggerServerEvent('qb-weldingbar:server:SetBusyState', point, false)
-        QBCore.Functions.Notify("Proces Anulat..", "error")
-        SucceededAttempts = 0
-        FreezeEntityPosition(ped, false)
-        SetTimeout(500, function()
-            Welding = false
-        end)
-    end)
-end
 
 local function PoliceCall()
     local chance = 20
@@ -100,9 +53,71 @@ local function PoliceCall()
     end
 end
 
+local function CutIron(point)
+    local ped = PlayerPedId()
+    local Skillbar = exports['qb-skillbar']:GetSkillbarObject()
+    QBCore.Functions.TriggerCallback('qb-weldingbar:server:HasItems', function(result)
+        if result then
+            TriggerServerEvent('qb-weldingbar:server:RemoveItem', point)
+                TriggerServerEvent('qb-weldingbar:server:SetBusyState', point, true)
+                FreezeEntityPosition(ped, true)
+                TriggerEvent('animations:client:EmoteCommandStart', {"weld"})
+                PoliceCall()
+                Welding = true
+                        Skillbar.Start({
+                            duration = math.random(7500, 15000),
+                            pos = math.random(10, 30),
+                            width = math.random(10, 20),
+                        }, function()
+                            if SucceededAttempts + 1 >= NeededAttempts then
+                                Welding = false
+                                ClearPedTasks(PlayerPedId())
+                                TriggerServerEvent('qb-weldingbar:server:searchCheckpoint', point)
+                                Config.Checkpoints[point]["opened"] = true
+                                TriggerServerEvent('qb-weldingbar:server:SetBusyState', point, true)
+                                SucceededAttempts = 0
+                                FreezeEntityPosition(ped, false)
+                                SetTimeout(500, function()
+                                    Welding = false
+                                end)
+                            else
+                                Skillbar.Repeat({
+                                    duration = math.random(700, 1250),
+                                    pos = math.random(10, 40),
+                                    width = math.random(10, 13),
+                                })
+                                SucceededAttempts = SucceededAttempts + 1
+                            end
+                        end, function()
+                            TriggerEvent('animations:client:EmoteCommandStart', {"c"})
+                            Welding = false
+                            ClearPedTasks(PlayerPedId())
+                            TriggerServerEvent('qb-weldingbar:server:SetBusyState', point, false)
+                            QBCore.Functions.Notify("Proces Anulat..", "error")
+                            SucceededAttempts = 0
+                            FreezeEntityPosition(ped, false)
+                            SetTimeout(500, function()
+                                Welding = false
+                            end)
+                        end)  
+        else
+            QBCore.Functions.Notify("Iti lipseste aparatul de sudura sau tuburile..", "error")
+        end
+    end)  
+end
+
+
+
 -- Events
 
 RegisterNetEvent('qb-weldingbar:client:SetBusyState', function(point, bool)
+    Config.Checkpoints[point]["opened"]= bool
+end)
+
+
+RegisterNetEvent('qb-weldingbar:client:StartWelding', function(point, bool)
+    CutIron(point)
+    PoliceCall()
     Config.Checkpoints[point]["opened"]= bool
 end)
 
@@ -118,7 +133,8 @@ CreateThread(function()
     while true do
         local ped = PlayerPedId()
         local pos = GetEntityCoords(ped)
-        local sleep = 2000
+        local check = true
+        local sleep = 1500
         for k, v in pairs(Config.Checkpoints) do
             local player, distance = GetClosestPlayer()
             if distance > 1 or distance == -1 then
@@ -129,31 +145,15 @@ CreateThread(function()
                 if #(pos - Config.Checkpoints[k]["coords"]) < 1 then
                     sleep = 3
                     if not Config.Checkpoints[k]["opened"] then
-                            DrawText3Ds(Config.Checkpoints[k]["coords"].x, Config.Checkpoints[k]["coords"].y, Config.Checkpoints[k]["coords"].z, '~g~E~w~ - Taie Otel ')
-                            if not IsLockpicking then
-                                if IsControlJustReleased(0, 38) and check then
-                                    QBCore.Functions.TriggerCallback('QBCore:HasItem', function(result)
-                                        if result then
-                                            QBCore.Functions.TriggerCallback('QBCore:HasItem', function(result2)
-                                                if result2 then
-                                                    TriggerServerEvent('qb-weldingbar:server:RemoveItem', ped)
-                                                    CutIron(k)
-                                                    Config.Checkpoints[k]["opened"] = false
-                                                    PoliceCall()
-                                                else
-                                                    QBCore.Functions.Notify('Iti lipsesc tuburi de argon..', 'error', 3500)
-                                                end
-                                            end, "tuburisudura")
-                                        else
-                                            QBCore.Functions.Notify('Iti lipseste aparatul de sudura..', 'error', 3500)
-                                        end
-                                    end, "sudura")
-                                elseif  IsControlJustReleased(0, 38) and not check then
-                                    QBCore.Functions.Notify('Cineva este prea aproape de tine..', 'error', 3500)
-                                end
+                        DrawText3Ds(Config.Checkpoints[k]["coords"].x, Config.Checkpoints[k]["coords"].y, Config.Checkpoints[k]["coords"].z + 0.7, '~g~E~w~ - Taie Otel ')
+                            if IsControlJustReleased(0, 38) and check then
+                                    Config.Checkpoints[k]["opened"]= false
+                                    CutIron(k)
+                            elseif  IsControlJustReleased(0, 38) and not check then
+                                QBCore.Functions.Notify('Cineva este prea aproape de tine..', 'error', 3500)
                             end
                     else
-                        DrawText3Ds(Config.Checkpoints[k]["coords"].x, Config.Checkpoints[k]["coords"].y, Config.Checkpoints[k]["coords"].z, 'Taiat')
+                        DrawText3Ds(Config.Checkpoints[k]["coords"].x, Config.Checkpoints[k]["coords"].y, Config.Checkpoints[k]["coords"].z + 0.7, 'Taiat')
                     end
                 end
         end
